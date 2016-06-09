@@ -10,9 +10,9 @@ ImageDealer.REF = firebase;
 var currentUser=null ;
 var currentUserid=null ;
 var picURL;
-//var viewModal = new ViewModal($("#view-modal"));
-var uploadModal = new UploadModal($("#upload-modal"));
 
+var uploadModal = new UploadModal($("#upload-modal"));
+var viewModal = new ViewModal($("#view-modal"));
 /* i add*/
 var fbProvider = new firebase.auth.FacebookAuthProvider();
 
@@ -80,20 +80,11 @@ $("#signout").click(function () {
 
 $("#submitData").click(function () {
     // 上傳新商品
-   // var newdata=firebase.database().ref("Items/").push({title:,price:,descrip:,seller:});
- //   firebase.database().ref("Users/"+currentUser).update({items:newdata});
   var dataArr = $("#item-info").serializeArray();
   var picFile = $("#picData")[0].files[0];
- // var picTrans = new FileReader();
   if (dataArr[0].value != "" && dataArr[1].value != "" && dataArr[2].value != "" && picFile) {
     //check if it is picture(not yet)
     saveItems(dataArr[0].value, dataArr[1].value, dataArr[2].value);
-/*    picTrans.readAsDataURL(picFile);
-    picTrans.onloadend = (function (imge) {return function (e) {
-        imge.src = e.target.result;
-        saveItems(dataArr[0].value, dataArr[1].value, dataArr[2].value, e.target.result);
-    }})(picFile);*/
- 
     console.log("finish submit");
     $("#upload-modal").modal('hide');
   }
@@ -117,14 +108,7 @@ $("#removeData").click(function () {
   $("#upload-modal").modal('hide');
 });
 
-/*
-    商品按鈕在dropdown-menu中
-    三種商品篩選方式：
-    1. 顯示所有商品
-    2. 顯示價格高於 NT$10000 的商品
-    3. 顯示價格低於 NT$9999 的商品
 
-*/
 
 
 function logginOption(isLoggin) {
@@ -173,11 +157,7 @@ function produceSingleItem(sinItemData){
         呼叫 ViewModal callImage打開圖片
         創建一個 MessageBox 物件，將 Message 的結構顯示上 #message 裡。
         */
-    var viewModal = new ViewModal($("#view-modal"));
-  //  console.log(sinItemData.itemKey+" "+ thisitem.seller)
-  //  viewModal.callImage(sinItemData.itemKey,thisitem.seller);
- //   viewModal.callImage(item.key,thisitem.seller);
- //   console.log(product.editBtn);
+    
     $(product.editBtn).click(function(snapshot){
     //  updateModal(product.dom);
       uploadModal.clear;
@@ -191,14 +171,11 @@ function produceSingleItem(sinItemData){
               });
     });
     $(product.viewBtn).click(function(snapshot){
-    //  updateModal(product.dom);
       viewModal.clear;
       firebase.database().ref("Items/"+product.itemKey+"/").once("value",function (item) {
-     //   console.log(thisitem.seller);
         viewModal.callImage(product.itemKey,thisitem.seller);
         viewModal.writeData( item.val());
-        //viewModal.callImage(product.itemKey,item.val().seller);
-        //viewModal.writeData( item.val());
+
       });
    //   console.log(sinItemData.itemKey+"~");
       var messBox = new MessageBox(firebase.auth().currentUser, sinItemData.itemKey); 
@@ -211,32 +188,23 @@ function produceSingleItem(sinItemData){
       
       if (currentUser) 
       {
-       // console.log(product.itemKey===sinItemData);
-        
+      
         $("#message").append(messBox.inputBox);
-       
         messBox.inputBox.keypress(function (e) {
           if (e.which == 13) 
           {
             e.preventDefault();
-      //      console.log($(this).find("#dialog").val());
             var userdialog=$(this).find("#dialog").val();
-        //    console.log(product.itemKey);
-        //    console.log(messBox.userName);
-        //   console.log(firebase.auth().currentUser);
             var currentUserid = firebase.auth().currentUser.uid;
             var currentUserName=firebase.auth().currentUser.displayName;
-         //   var picURL;
             firebase.database().ref("Users/"+currentUserid+"/").once("value",function (item) {
                 picURL=item.val().photo;
-          //      console.log(picURL);
                 var message={"message":userdialog, "userTime": new Date().getTime(), "talkerID": currentUserid,"talkerName":currentUserName,"picture":picURL};
                 var newmessage = firebase.database().ref("Items/").child(product.itemKey+"/Messages");
                 //firebase.database.ref("Items").off();
                 newmessage.push(message);
                 viewModal.callImage(sinItemData.itemKey,thisitem.seller);
-                //messBox.addDialog({"message":userdialog, "time": new Date().getTime(), "name": currentUserName,"picURL":picURL});
-               // $("#message").append(messBox.dom);
+
             });            
                 
             $(this).find("#dialog").val("");
@@ -263,19 +231,15 @@ function produceSingleItem(sinItemData){
 function generateDialog(diaDatakey, messageBox) {
     
     firebase.database().ref("Items/"+diaDatakey+"/Messages/").orderByChild("userTime").on("value",function(data) {
- //     console.log(data.val());
       messageBox.refresh();
       var messages = data.val()
       for(var messageKey in messages){
         if(messages.hasOwnProperty(messageKey)){
           var singleMessage = messages[messageKey];
           messageBox.addDialog({"message":singleMessage.message, "time": singleMessage.userTime, "name": singleMessage.talkerName,"picURL":singleMessage.picture});
-         // $("#message").append(messBox.inputBox);
         }
       }
     });
- //   var messBox = new MessageBox(item.val().talkerID, diaDatakey); 
-  //  messBox.addDialog({"message":userdialog, "time": new Date().getTime(), "name": currentUserName,"picURL":picURL});
 }
 
 /*-------------------------------------------------------------------------*/
@@ -295,7 +259,6 @@ function saveItems(title, price, descrip) {
 function editItems(title, price, descrip,isNewPic) {
   console.log("edit");
     firebase.database().ref("Items/").child(nowItem).once("value",function (item) {
-   // uploadModal.callImage(nowItem, item.val().seller);
      uploadModal.upload;
      if(isNewPic!=null)
      {
@@ -306,10 +269,7 @@ function editItems(title, price, descrip,isNewPic) {
     firebase.database().ref("Items/").child(nowItem).update({"title":title, "price":parseInt(price), "descrip":descrip, "userTime":new Date ($.now()).toLocaleString()});
     firebase.database().ref("Users/"+item.val().seller+"/sellItems/").child(nowItem).update({"title":title, "price":parseInt(price), "descrip":descrip, "userTime":new Date ($.now()).toLocaleString()});
     });
-
   }
-
-
 
 function removeItems() {
   console.log(nowItem);
@@ -324,7 +284,14 @@ function removeItems() {
   var curr=firebase.database().ref("Items").child(nowItem);
   curr.remove();
 }
+/*
+    商品按鈕在dropdown-menu中
+    三種商品篩選方式：
+    1. 顯示所有商品
+    2. 顯示價格高於 NT$10000 的商品
+    3. 顯示價格低於 NT$9999 的商品
 
+*/
 $("#SelectPrice li:nth-of-type(1)").click(function (event) {
   firebase.database().ref("Items").once("value",reProduceAll);
 });
